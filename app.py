@@ -166,12 +166,15 @@ def printDataForAll():
 
 #Usuwanie informacji o rejsach
 def deleteInfo(object):
-    if st.button("Czy na pewno usunąć rejs?"):
+    st.write("Czy na pewno usunąć rejs?")
+    if st.button("Tak"):
         c.execute(f"DELETE FROM rejs_new WHERE id = {object.id}")
         conn.commit()
         c.execute(f"DELETE FROM rejs WHERE id = {object.id}")
         conn.commit()
         st.success(f"Usunięto dane")
+    if st.button("Nie"):
+        st.success("Ok")
 
 #Funkcja dodająca przewidywany czas powrotu
 def timeCruise(elem):
