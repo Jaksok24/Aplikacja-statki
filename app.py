@@ -78,35 +78,7 @@ kormoran = []
 ckt_vip = []
 tablicaDanych = []
 tablicaDanych2 = []
-id_edit = []
-daneDoEdycji = []
-
-#Edycja
-def changeData():
-    columns = st.columns([1,1,1,1,1])
-    with columns[0]:
-        upd_hour = st.time_input("Godzina")
-    with columns[1]:
-        upd_people = st.number_input("Pasażerowie")
-    with columns[2]:
-        upd_cruise = st.selectbox("Wybierz rejs", ["Po rzekach i jeziorach - 1h", "Fotel Papieski - 1h", "Kanał Augustowski - 1h", "Dolina Rospudy - 1,5h", "Szlakiem Papieskim - 3h", "Staw Swoboda - 4h", "Gorczyca - „Pełen Szlak Papieski” – 6h", "Paniewo"])
-    with columns[3]:
-        upd_ship = st.selectbox("Statek", ["Albatros", "Biała Mewa", "Kormoran", "CKT VIP"])
-    with columns[4]:
-        upd_catering = st.selectbox("Katering", ["Tak", "Nie"])
-    if st.button("Zapisz zmiany"):   
-        if upd_hour and upd_people and upd_cruise and upd_ship and upd_catering:
-            if (upd_hour != object.hour or upd_people != object.people or 
-                upd_cruise != object.cruise or upd_ship != object.ship or 
-                upd_catering != object.catering):
-                c.execute(f"UPDATE rejs_now SET hour=?, people=?, cruise=?, ship=?, catering=? WHERE id=?",
-                        (upd_hour, upd_people, upd_cruise, upd_ship, upd_catering, object.id))
-                conn.commit()
-                st.success("Dane zostały zaktualizowane pomyślnie.")
-            else:
-                st.info("Wprowadź nowe dane, aby dokonać aktualizacji.")
-        else:
-            st.warning("Proszę wypełnić wszystkie pola.")
+editData = []
 
 #Funkcja do dodawania liczby ludzi
 def checkCruise(theDay):
@@ -146,6 +118,9 @@ def printData():
             time_str2 = new_time.strftime('%H:%M')
             with ct1[0]:
                 st.write(f"{elem.hour} - {time_str2}")
+            #     edit_button = st.button("Edytuj", key=f"a{i}")
+            # if edit_button:
+            #     editableInput(elem, i)
             with ct1[1]:
                 st.write(str(elem.people))
             with ct1[2]:
@@ -154,9 +129,9 @@ def printData():
                 st.write(elem.ship)  
             with ct1[4]:
                 st.write(elem.catering)
-                dlt = st.button(f"Usuń  {i}")
-                if dlt:
-                    deleteInfo(elem)
+        dlt = st.button(f"Usuń", key=f"b{i}")
+        if dlt:
+            deleteInfo(elem)
 
 #Funkcja do wyświetlania skróconych danych o rejsach dla wszystkich dni
 def printDataForAll():
@@ -172,6 +147,9 @@ def printDataForAll():
             time_str3 = new_time.strftime('%H:%M')
             with ct_all1[0]:  
                 st.write(elem.date)
+            #     edit_button_all = st.button("Edytuj", key=f"c{i}")
+            # if edit_button_all:
+            #     st.success("Tu będzie edycja")
             with ct_all1[1]:
                 st.write(f"{elem.hour} - {time_str3}")
             with ct_all1[2]:
@@ -182,17 +160,18 @@ def printDataForAll():
                 st.write(elem.ship)
             with ct_all1[5]:
                 st.write(elem.catering)
-                dlt2 = st.button(f"Usuń {i}")
-                if dlt2:
-                    deleteInfo(elem)
+        dlt2 = st.button(f"Usuń", key=f"d{i}")
+        if dlt2:
+            deleteInfo(elem)
 
 #Usuwanie informacji o rejsach
 def deleteInfo(object):
-    c.execute(f"DELETE FROM rejs_new WHERE id = {object.id}")
-    conn.commit()
-    c.execute(f"DELETE FROM rejs WHERE id = {object.id}")
-    conn.commit()
-    st.success(f"Usunięto dane")
+    if st.button("Czy na pewno usunąć rejs?"):
+        c.execute(f"DELETE FROM rejs_new WHERE id = {object.id}")
+        conn.commit()
+        c.execute(f"DELETE FROM rejs WHERE id = {object.id}")
+        conn.commit()
+        st.success(f"Usunięto dane")
 
 #Funkcja dodająca przewidywany czas powrotu
 def timeCruise(elem):
@@ -243,7 +222,7 @@ def saveDataToArray():
             ckt_vip.append(cruiseInfo)
     
 #Wyświetlanie szczegółowych informacji o rejsach
-def showDataFromArray(shipTable):
+def showDetails(shipTable):
     for i, object in enumerate(shipTable):
         timeCruise(object)
         time_str = new_time.strftime('%H:%M')
@@ -261,14 +240,17 @@ def addCruiseInfo():
             date = st.date_input("Podaj dzień", value="today", format="DD.MM.YYYY", label_visibility="visible")
             ship = st.selectbox("Wybierz statek", ["Albatros", "Biała Mewa", "Kormoran", "CKT VIP"])
             fee = st.selectbox("Zaliczka", ["Nie", "Tak"])
-            people = st.number_input("Ilość osób", step=1, max_value=60, min_value=0)
+            if ship == "Albatros":
+                people = st.number_input("Ilość osób", step=1, max_value=60, min_value=0)
+            else:
+                people = st.number_input("Ilość osób", step=1, max_value=12, min_value=0)
         with columns[1]:
             phone_column = st.columns([1,3])
             with phone_column[0]:
                 dc = st.selectbox("Kierunkowy", ["🇵🇱 +48", "🇷🇺 +7", "🇩🇪 +49", "🇱🇹 +370", "🇱🇻 +371", "🇪🇪 +372", "🇺🇦 +380", "🇨🇿 +420", "🇸🇰 +421"])
             with phone_column[1]:
                 nb = st.text_input("Podaj numer telefonu")
-            hour = st.time_input("Podaj godzinę")
+            hour = st.time_input("Podaj godzinę")  
             cruise = st.selectbox("Wybierz rejs", ["Po rzekach i jeziorach - 1h", "Fotel Papieski - 1h", "Kanał Augustowski - 1h", "Dolina Rospudy - 1,5h", "Szlakiem Papieskim - 3h", "Staw Swoboda - 4h", "Gorczyca - „Pełen Szlak Papieski” – 6h", "Paniewo"])
             fee_cost = st.number_input("Kwota zaliczki")
             catering = st.selectbox("Katering", ["Tak", "Nie"])
@@ -284,7 +266,7 @@ def addCruiseInfo():
             conn.commit()
             st.success("Dane zostały dodane pomyślnie")
         else:
-            st.warning("Wprowadź dane", icon="🚨")
+            st.warning("Wprowadź dane", icon="🚨")   
 
 #Zapisz do DataFrame wszystkie dane z tabeli
 def showAllData():
@@ -292,92 +274,65 @@ def showAllData():
     df = pd.DataFrame([row for row in c.fetchall()], columns=("Imię i nazwisko", "Kierunkowy", "Nr tel", "Statek", "Data", "Godzina", "Rejs", "Ilość ludzi", "Zaliczka", "Kwota zaliczki", "Katering", "Notatki", "ID"))
     return df
 
-#Edytuj dane
-def editInfo(edited_df):
-    for index, row in edited_df.iterrows():
-        edited_id = row["ID"]
-
-        customer = row["Imię i nazwisko"]
-        dc = row["Kierunkowy"]
-        nb = row["Nr tel"]
-        date = row["Data"]
-        hour = row["Godzina"]
-        cruise = row["Rejs"]
-        ship = row["Statek"]
-        people = row["Ilość ludzi"]
-        fee = row["Zaliczka"]
-        fee_cost = row["Kwota zaliczki"]
-        catering = row["Katering"]
-        note = row["Notatki"]
-        
-        c.execute("SELECT COUNT(*) FROM rejs WHERE id=?", (edited_id,))
-        count_rejs = c.fetchone()[0]
-        
-        c.execute("SELECT COUNT(*) FROM rejs_new WHERE id=?", (edited_id,))
-        count_rejs_new = c.fetchone()[0]
-        
-        if count_rejs > 0:
-            c.execute("""
-                UPDATE rejs 
-                SET customer=?, dc=?, nb=?, date=?, hour=?, cruise=?, ship=?, people=?, fee=?, fee_cost=?, catering=?, note=? 
-                WHERE id=?
-            """, (
-                customer, dc, nb, date, hour, cruise, ship, people, fee, fee_cost, catering, note, edited_id
-            ))
-        else:
-            c.execute("""
-                INSERT INTO rejs (id, customer, dc, nb, date, hour, cruise, ship, people, fee, fee_cost, catering, note) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                edited_id, customer, dc, nb, date, hour, cruise, ship, people, fee, fee_cost, catering, note
-            ))
-        
-        if count_rejs_new > 0:
-            c.execute("""
-                UPDATE rejs_new 
-                SET customer=?, dc=?, nb=?, date=?, hour=?, cruise=?, ship=?, people=?, fee=?, fee_cost=?, catering=?, note=? 
-                WHERE id=?
-            """, (
-                customer, dc, nb, date, hour, cruise, ship, people, fee, fee_cost, catering, note, edited_id
-            ))
-        else:
-            c.execute("""
-                INSERT INTO rejs_new (id, customer, dc, nb, date, hour, cruise, ship, people, fee, fee_cost, catering, note) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                edited_id, customer, dc, nb, date, hour, cruise, ship, people, fee, fee_cost, catering, note
-            ))
+#Inputy pobierające dane z rekordów tabeli
+def editableInput(obj, i):
+    columns = st.columns([1,1])
+    with columns[0]:
+        customer = st.text_input("Imię i nazwisko", value=obj.customer, key=f"a{i}")
+        date = st.date_input("Dzień", value=datetime.strptime(obj.date, "%Y-%m-%d").date(), format="DD.MM.YYYY", min_value=datetime.strptime("2000-01-01", "%Y-%m-%d").date(), key=f"b{i}")
+        ship = st.selectbox("Statek", ["Albatros", "Biała Mewa", "Kormoran", "CKT VIP"], index=["Albatros", "Biała Mewa", "Kormoran", "CKT VIP"].index(obj.ship), key=f"c{i}")
+        fee = st.selectbox("Zaliczka", ["Nie", "Tak"], index=["Nie", "Tak"].index(obj.fee), key=f"d{i}")
+        people = st.number_input("Ilość osób", step=1, max_value=60, min_value=0, value=obj.people, key=f"e{i}")
+    with columns[1]:
+        phone_column = st.columns([1,3])
+        with phone_column[0]:
+            dc = st.selectbox("Kierunkowy", ["🇵🇱 +48", "🇷🇺 +7", "🇩🇪 +49", "🇱🇹 +370", "🇱🇻 +371", "🇪🇪 +372", "🇺🇦 +380", "🇨🇿 +420", "🇸🇰 +421"], index=["🇵🇱 +48", "🇷🇺 +7", "🇩🇪 +49", "🇱🇹 +370", "🇱🇻 +371", "🇪🇪 +372", "🇺🇦 +380", "🇨🇿 +420", "🇸🇰 +421"].index(obj.dc), key=f"f{i}")
+        with phone_column[1]:
+            nb = st.text_input("Numer telefonu", value=obj.nb, key=f"g{i}")
+        hour = st.time_input("Godzina", value=datetime.strptime(obj.hour, '%H:%M').time(), key=f"h{i}")
+        cruise = st.selectbox("Rejs", ["Po rzekach i jeziorach - 1h", "Fotel Papieski - 1h", "Kanał Augustowski - 1h", "Dolina Rospudy - 1,5h", "Szlakiem Papieskim - 3h", "Staw Swoboda - 4h", "Gorczyca - „Pełen Szlak Papieski” – 6h", "Paniewo"], index=["Po rzekach i jeziorach - 1h", "Fotel Papieski - 1h", "Kanał Augustowski - 1h", "Dolina Rospudy - 1,5h", "Szlakiem Papieskim - 3h", "Staw Swoboda - 4h", "Gorczyca - „Pełen Szlak Papieski” – 6h", "Paniewo"].index(obj.cruise), key=f"i{i}")
+        fee_cost = st.number_input("Kwota zaliczki", value=obj.fee_cost, key=f"j{i}")
+        catering = st.selectbox("Katering", ["Tak", "Nie"], index=["Tak", "Nie"].index(obj.catering), key=f"k{i}")
+    note = st.text_area("Notatki", value=obj.note, key=f"l{i}")
+    accept_changes_button = st.button("Zapisz zmiany", key=f"m{i}")
+    if accept_changes_button:
+        hour_str = hour.strftime("%H:%M")
+        date_str = date.strftime("%Y-%m-%d")
+        c.execute("UPDATE rejs SET customer = ?, dc = ?, nb = ?, date = ?, hour = ?, cruise = ?, ship = ?, people = ?, fee = ?, fee_cost = ?, catering = ?, note = ? WHERE id = ?",
+            (customer, dc, nb, date_str, hour_str, cruise, ship, people, fee, fee_cost, catering, note, obj.id))
+        c.execute("UPDATE rejs_new SET customer = ?, dc = ?, nb = ?, date = ?, hour = ?, cruise = ?, ship = ?, people = ?, fee = ?, fee_cost = ?, catering = ?, note = ? WHERE id = ?",
+            (customer, dc, nb, date_str, hour_str, cruise, ship, people, fee, fee_cost, catering, note, obj.id))
         conn.commit()
-    st.success("Zaktualizowano dane")
+        st.success( "Zaktualizowano dane")
 
-def edit():
-    st.header("Edytuj rejs :pencil:")
-    toEdit = showAllData()
-    edited_df = st.data_editor(toEdit)
-    edit_button = st.button("zapisz zmiany")
-    if edit_button:
-        editInfo(edited_df)
-
+#Edytowanie danych
+def editInfo():
+    c.execute("SELECT id, customer, dc, nb, date, hour, cruise, ship, people, fee, fee_cost, catering, note FROM rejs")
+    for elem in c.fetchall():
+        obj = Ship(elem[0], elem[1], elem[2], elem[3], elem[4], elem[5], elem[6], elem[7], elem[8], elem[9], elem[10], elem[11], elem[12])
+        editData.append(obj)
+    for i, elem in enumerate(editData):
+        st.write(f"Rejs nr {elem.id}")
+        with st.popover(f"{elem.customer} | {elem.ship} | {elem.cruise} | {elem.date} | {elem.hour}", use_container_width=True):
+            editableInput(elem, i)
+            
 #Ustawienia SideBar (DODAĆ DO LOGOWANIA IKONE "box-arrow-in-right")
 with st.sidebar:
     selected = option_menu(
-        menu_title = "Menu",
+        menu_title = "Port Katamaranów",
         options = ["Strona główna", "Szczegóły", "Panel zarządzania", "Historia"],
         icons = ["house", "book", "pencil-square", "clock-history"],
-        menu_icon = "list-task",
+        menu_icon="tsunami",
         default_index = 0,
     )
 
 #Strona główna
 if (selected == "Strona główna"):
-    editbut = st.button("Edytuj dane")
-    if editbut:
-        edit()
     tab_1, tab_2 = st.tabs(["Wybrany dzień", "Wszystko"])
     with tab_1:
         theDay = choiceTheDay()
         checkCruise(theDay)
-        printData()   
+        printData()
     with tab_2:
         checkCruiseForAll()
         printDataForAll()
@@ -388,37 +343,31 @@ if (selected == "Szczegóły"):
     
     #Wybierz dzień
     theDay2 = choiceTheDay()
-    st.divider()
-    
-    #Kolumny dla danych statków
-    scr = st.columns([1,1,1,1])
-    with scr[0]: 
-        st.markdown(f"<h3 style=\"{title_style}\">Albatros<p>Limit osób: 60</p></h3>", unsafe_allow_html=True)
-        st.divider()
-    with scr[1]:
-        st.markdown(f"<h3 style=\"{title_style}\">Biała Mewa<p>Limit osób: 12</p></h3>", unsafe_allow_html=True)
-        st.divider()
-    with scr[2]:
-        st.markdown(f"<h3 style=\"{title_style}\">Kormoran<p>Limit osób: 12</p></h3>", unsafe_allow_html=True)
-        st.divider()
-    with scr[3]:
-        st.markdown(f"<h3 style=\"{title_style}\">CKT VIP<p>Limit osób: 12</p></h3>", unsafe_allow_html=True)
-        st.divider()
-    
+
     #Zapis wybranych danych
     c.execute(f"SELECT id, customer, dc, nb, date, hour, cruise, ship, people, fee, fee_cost, catering, note FROM rejs WHERE date='{theDay2}' ORDER BY hour")
     saveDataToArray()
     
-    #Wyświetlanie danych
-    with scr[0]:
-        showDataFromArray(albatros)
-    with scr[1]:          
-        showDataFromArray(biala_mewa)
-    with scr[2]:
-        showDataFromArray(kormoran)
-    with scr[3]:
-        showDataFromArray(ckt_vip)
-
+    #Wyświetl dane
+    scr = st.columns([1,1,1,1])
+    albatros_tab, biala_mewa_tab, kormoran_tab, ckt_vip_tab = st.tabs(["Albatros", "Biała Mewa", "Kormoran", "CKT VIP"])
+    with albatros_tab: 
+        st.markdown(f"<h3 style=\"{title_style}\">Albatros<p>Limit osób: 60</p></h3>", unsafe_allow_html=True)
+        st.divider()
+        showDetails(albatros)
+    with biala_mewa_tab:
+        st.markdown(f"<h3 style=\"{title_style}\">Biała Mewa<p>Limit osób: 12</p></h3>", unsafe_allow_html=True)
+        st.divider()
+        showDetails(biala_mewa)
+    with kormoran_tab:
+        st.markdown(f"<h3 style=\"{title_style}\">Kormoran<p>Limit osób: 12</p></h3>", unsafe_allow_html=True)
+        st.divider()
+        showDetails(kormoran)
+    with ckt_vip_tab:
+        st.markdown(f"<h3 style=\"{title_style}\">CKT VIP<p>Limit osób: 12</p></h3>", unsafe_allow_html=True)
+        st.divider()
+        showDetails(ckt_vip)
+    
 #Panel zarządzania danymi
 if selected == "Panel zarządzania":
     tab1, tab2 = st.tabs(["Dodaj rejs", "Edytuj"])
@@ -427,7 +376,8 @@ if selected == "Panel zarządzania":
         addCruiseInfo()
         
     with tab2:
-        edit()
+        st.header("Edytuj dane")
+        editInfo()
 
 if (selected == "Historia"):
     st.markdown("<h1 style=\"background-color: #85C1C1; color: #FFFFFF; border-radius: 10px; font-weight: bold; padding-left: 1rem;\">Historia rejsów<h1>", unsafe_allow_html=True)
