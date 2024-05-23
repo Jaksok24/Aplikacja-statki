@@ -164,17 +164,11 @@ def printDataForAll():
         if dlt2:
             deleteInfo(elem)
 
-#Usuwanie informacji o rejsach
 def deleteInfo(object):
-    st.write("Czy na pewno usunąć rejs?")
-    if st.button("Tak"):
-        c.execute(f"DELETE FROM rejs_new WHERE id = {object.id}")
-        conn.commit()
-        c.execute(f"DELETE FROM rejs WHERE id = {object.id}")
-        conn.commit()
-        st.success(f"Usunięto dane")
-    if st.button("Nie"):
-        st.success("Ok")
+    c.execute(f"DELETE FROM rejs_new WHERE id = {object.id}")
+    conn.commit()
+    c.execute(f"DELETE FROM rejs WHERE id = {object.id}")
+    conn.commit()
 
 #Funkcja dodająca przewidywany czas powrotu
 def timeCruise(elem):
@@ -200,6 +194,9 @@ def timeCruise(elem):
         return new_time
     elif elem.cruise == "Gorczyca - „Pełen Szlak Papieski” - 6h":
         new_time = time + timedelta(hours=6)
+        return new_time
+    elif elem.cruise == "":
+        new_time = time + timedelta(hours=1)
         return new_time
     else:
         return None
@@ -233,6 +230,8 @@ def showDetails(shipTable):
         with st.expander("Szczegóły"):
             for info in object.printData():
                 st.write(info)
+        if st.button("Usuń", key=i):
+            deleteInfo(object)
 
 #Całe ustawienia do panelu dodawania informacji
 def addCruiseInfo():
@@ -318,7 +317,7 @@ def editInfo():
         st.write(f"Rejs nr {elem.id}")
         with st.popover(f"{elem.customer} | {elem.ship} | {elem.cruise} | {elem.date} | {elem.hour}", use_container_width=True):
             editableInput(elem, i)
-            
+
 #Ustawienia SideBar (DODAĆ DO LOGOWANIA IKONE "box-arrow-in-right")
 with st.sidebar:
     selected = option_menu(
@@ -370,7 +369,7 @@ if (selected == "Szczegóły"):
         st.markdown(f"<h3 style=\"{title_style}\">CKT VIP<p>Limit osób: 12</p></h3>", unsafe_allow_html=True)
         st.divider()
         showDetails(ckt_vip)
-    
+
 #Panel zarządzania danymi
 if selected == "Panel zarządzania":
     tab1, tab2 = st.tabs(["Dodaj rejs", "Edytuj"])
