@@ -107,7 +107,7 @@ def checkCruiseForAll():
 #Wyświetl skrócone dane o rejsie na dany dzień
 def printData(): 
     ct = st.columns([1,1,1,1,1])
-    head_title = ["Godziny", "Osoby", "Rejs", "Statek", "Katering"]
+    head_title = ["Godziny", "Osoby", "Rejs", "Statek", "Catering"]
     for i in range(len(head_title)):
         with ct[i]:
             st.header(head_title[i])
@@ -136,7 +136,7 @@ def printData():
 #Funkcja do wyświetlania skróconych danych o rejsach dla wszystkich dni
 def printDataForAll():
     ct_all = st.columns([1,1,1,1,1,1])
-    head_title_all = ["Data", "Godziny", "Osoby", "Rejs", "Statek", "Katering"]
+    head_title_all = ["Data", "Godziny", "Osoby", "Rejs", "Statek", "Catering"]
     for i in range(len(head_title_all)):
         with ct_all[i]:
             st.header(head_title_all[i])
@@ -255,7 +255,7 @@ def addCruiseInfo():
             hour = st.time_input("Podaj godzinę")  
             cruise = st.selectbox("Wybierz rejs", ["Po rzekach i jeziorach - 1h", "Fotel Papieski - 1h", "Kanał Augustowski - 1h", "Dolina Rospudy - 1,5h", "Szlakiem Papieskim - 3h", "Staw Swoboda - 4h", "Gorczyca - „Pełen Szlak Papieski” – 6h", "Paniewo"])
             fee_cost = st.number_input("Kwota zaliczki")
-            catering = st.selectbox("Katering", ["Tak", "Nie"])
+            catering = st.selectbox("Catering", ["Tak", "Nie"])
         note = st.text_area("Notatki")
         add_button = st.button("Zapisz")
     if add_button:
@@ -294,7 +294,7 @@ def editableInput(obj, i):
         hour = st.time_input("Godzina", value=datetime.strptime(obj.hour, '%H:%M').time(), key=f"h{i}")
         cruise = st.selectbox("Rejs", ["Po rzekach i jeziorach - 1h", "Fotel Papieski - 1h", "Kanał Augustowski - 1h", "Dolina Rospudy - 1,5h", "Szlakiem Papieskim - 3h", "Staw Swoboda - 4h", "Gorczyca - „Pełen Szlak Papieski” – 6h", "Paniewo"], index=["Po rzekach i jeziorach - 1h", "Fotel Papieski - 1h", "Kanał Augustowski - 1h", "Dolina Rospudy - 1,5h", "Szlakiem Papieskim - 3h", "Staw Swoboda - 4h", "Gorczyca - „Pełen Szlak Papieski” – 6h", "Paniewo"].index(obj.cruise), key=f"i{i}")
         fee_cost = st.number_input("Kwota zaliczki", value=obj.fee_cost, key=f"j{i}")
-        catering = st.selectbox("Katering", ["Tak", "Nie"], index=["Tak", "Nie"].index(obj.catering), key=f"k{i}")
+        catering = st.selectbox("Catering", ["Tak", "Nie"], index=["Tak", "Nie"].index(obj.catering), key=f"k{i}")
     note = st.text_area("Notatki", value=obj.note, key=f"l{i}")
     accept_changes_button = st.button("Zapisz zmiany", key=f"m{i}")
     if accept_changes_button:
