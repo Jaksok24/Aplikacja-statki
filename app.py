@@ -209,12 +209,6 @@ def printDataForAll():
             with ct_all1[5]:
                 st.write(elem.catering)
 
-#Usuwanie informacji o rejsach
-def deleteInfo(object):
-    c.execute(f"DELETE FROM rejs WHERE id = {object.id}")
-    conn.commit()
-    st.success(f"Usunięto dane")
-
 #Zapisywanie danych do poszczególnych tablic
 def saveDataToArray():
     c.execute(f"SELECT id, customer, dc, nb, date, hour, cruise, ship, people, fee, fee_cost, catering, note, checked FROM rejs WHERE date='{theDay2}' ORDER BY hour")
@@ -238,8 +232,6 @@ def showDetails(shipTable):
         with st.expander("Szczegóły"):
             for info in object.printData():
                 st.write(info)
-        if st.button("Usuń", key=i):
-            deleteInfo(object)
             
 #Dodawanie informacji o rejsie
 def addCruiseInfo():
@@ -338,8 +330,11 @@ def editCruiseInfo(i, obj):
         fee_cost = st.number_input("Kwota zaliczki", value=obj.fee_cost, key=f"j{i}")
         catering = st.selectbox("Katering", ["Tak", "Nie"], index=["Tak", "Nie"].index(obj.catering), key=f"k{i}")
     note = st.text_area("Notatki", value=obj.note, key=f"l{i}")
-    accept_changes_button = st.button("Zapisz zmiany", key=f"m{i}")
-    delete_button = st.button("Usuń", key=f"n{i}")
+    cb = st.columns([1,1,1,1,1])
+    with cb[0]:
+        accept_changes_button = st.button("Zapisz zmiany", key=f"m{i}")
+    with cb[4]:
+        delete_button = st.button("Usuń", key=f"n{i}")
     if accept_changes_button:
         hour_str = hour.strftime("%H:%M")
         date_str = date.strftime("%Y-%m-%d")
@@ -362,8 +357,11 @@ def editDinnerInfo(i, obj):
             date = st.date_input("Podaj date", value=datetime.strptime(obj.date, "%Y-%m-%d").date(), format="DD.MM.YYYY", min_value=datetime.strptime("2000-01-01", "%Y-%m-%d").date(), key=f"dinner_c{i}")
          with dinCol[1]:
             hour = st.time_input("Podaj godzinę", value=datetime.strptime(obj.hour, '%H:%M').time(), key=f"dinner_d{i}")
-         accept_changes_button_dinner = st.button("Zapisz zmiany", key=f"dinner_e{i}")
-         delete_button_dinner = st.button("Usuń", key=f"dinner_f{i}")
+         cb = st.columns([1,1,1,1,1])
+         with cb[0]:
+            accept_changes_button_dinner = st.button("Zapisz zmiany", key=f"m{i}")
+         with cb[4]:
+            delete_button_dinner = st.button("Usuń", key=f"n{i}")
          if accept_changes_button_dinner:
             hour_str = hour.strftime("%H:%M")
             date_str = date.strftime("%Y-%m-%d")
@@ -374,6 +372,7 @@ def editDinnerInfo(i, obj):
          if delete_button_dinner:
              c.execute(f"DELETE FROM dinners WHERE id = {object.dID}")
              conn.commit()
+             st.success("Usunięto dane")
     
 #Ustawienia SideBar (DODAĆ DO LOGOWANIA IKONE "box-arrow-in-right")
 with st.sidebar:
