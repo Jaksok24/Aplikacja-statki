@@ -345,7 +345,7 @@ def editCruiseInfo(i, obj):
         conn.commit()
         st.success( "Zaktualizowano dane")
     if delete_button:
-        c.execute(f"DELETE FROM rejs WHERE id = {object.id}")
+        c.execute(f"DELETE FROM rejs WHERE id = {obj.id}")
         conn.commit()
         st.success(f"Usunięto dane")
 
