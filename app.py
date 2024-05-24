@@ -18,13 +18,13 @@ app_logger.setLevel(logging.INFO)
 #Style
 title_style = "color: White; background-color: #262730; text-align: Center; border-radius: 10px;"
 info_style = "color: White; background-color: #85C1C1; text-align: Center; border-radius: 10px; font-weight: bold;"
-tab_config = '''<style> .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p { font-size:2rem; } </style> '''
+tab_config = '''<style> .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p { font-size:2rem; } </style> '''      
 
 #Łączenia się z bazą danych
 conn = sqlite3.connect('statki_database.db')
 c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS rejs (id INTEGER PRIMARY KEY, customer TEXT, date DATE, hour TIME, ship TEXT, fee BOOLEAN, people INTEGER, nb TEXT, cruise TEXT, fee_cost INTEGER, catering TEXT, note TEXT, dc TEXT, checked TEXT)''')
-c.execute('''CREATE TABLE IF NOT EXISTS dinners (dID INTEGER PRIMARY KEY, dinner TEXT, data DATE, hour_dinner TIME, people INEGER, checked TEXT)''')
+c.execute('''CREATE TABLE IF NOT EXISTS dinners (dID INTEGER PRIMARY KEY, dinner TEXT, data DATE, hour_start TIME, hour_stop TIME, people INEGER, checked TEXT)''')
 
 #Tablice/zmienne wykorzystywane dla całej aplikacji
 current_time = datetime.now().strftime("%H:%M")
@@ -56,7 +56,7 @@ class Details:
         self.check = check
         
     def printData(self):
-        data = [f"Imię i nazwisko: {self.customer}", f"Numer telefonu: {self.dc}", f"{self.nb}", f"{self.date}", f"{self.hour}", self.cruise, f"{self.people}", f"Zaliczka: {self.fee}", f"Kwota zaliczki: {self.fee_cost} PLN", f"Katering: {self.catering}", f"Notatki: {self.note}", f"ID: {self.id}"]
+        data = [f"Imię i nazwisko: {self.customer}", f"Numer telefonu: {self.dc} {self.nb}", f"Data rejsu: {self.date}", f"Godzina: {self.hour}", self.cruise, f"Liczba ludzi: {self.people}", f"Zaliczka: {self.fee}", f"Kwota zaliczki: {self.fee_cost} PLN", f"Katering: {self.catering}", f"Notatki: {self.note}"]
         return data
 
 #Klasa rejsów do strony głównej
@@ -73,15 +73,18 @@ class Cruise:
 
 #Klasa do informacji o obiadach
 class Dinner:
-    def __init__(self, dID, hour, group, name, empty1, empty2, check, date):
+    def __init__(self, dID, hour_start, hour_stop, group, name, empty1, check, date):
         self.dID = dID
-        self.hour = hour
+        self.hour_start = hour_start
+        self.hour_stop = hour_stop
         self.group = group
         self.name = name
         self.empty1 = empty1
-        self.empty2 = empty2
         self.check = check
         self.date = date
+
+def switchPage(page):
+    st.session_state.page = page
 
 #Zapisz do DataFrame wszystkie dane z tabeli
 def showAllData():
@@ -129,7 +132,7 @@ def getShortData(theDay):
     c.execute(f'''SELECT * FROM
               (SELECT id, hour, SUM(people), ship, cruise, catering, checked, date FROM rejs GROUP BY hour, ship, cruise
               UNION
-              SELECT dID, hour_dinner as hour, people, dinner, ' ', ' ', checked, data as date FROM dinners)
+              SELECT dID, hour_start as hour, hour_stop, people, dinner, ' ', checked, data as date FROM dinners)
               WHERE date='{theDay}' ORDER BY hour''')
     for elem in c.fetchall():
         if elem[6] == 'cruise':
@@ -141,41 +144,35 @@ def getShortData(theDay):
             
 #Wyświetl skrócone dane o rejsie na dany dzień
 def printData(): 
-    ct = st.columns([1,1,1,1,1])
-    head_title = ["Godziny", "Rejs", "Osoby", "Statek", "Katering"]
-    for i in range(len(head_title)):
-        with ct[i]:
-            st.header(head_title[i])
+    st.markdown('''<table style="border: 0; border-collapse: collapse; border: 0; text-align: Center; width: 100%;">
+                <tr style="border: 0;">
+                <td style="border: 0; width: 20%"><h3>Godzina</h3></td>
+                <td style="border: 0; width: 20%"><h3>Rejs</h3></td>
+                <td style="border: 0; width: 20%;"><h3>Osoby</h3></td>
+                <td style="border: 0; width: 20%;"><h3>Statek</h3></td>
+                <td style="border: 0; width: 20%;"><h3>Catering</h3>
+                </td></tr></table><br>''', unsafe_allow_html=True)
     for elem in tablicaDanych:  
         if elem.check == 'cruise':
-            with st.container(border=True):
-                ct1 = st.columns([1,1,1,1,1])
-                timeCruise(elem)
-                time_str2 = new_time.strftime('%H:%M')
-                with ct1[0]:
-                    st.write(f"{elem.hour} - {time_str2}")
-                with ct1[1]:
-                    st.write(elem.cruise)
-                with ct1[2]:
-                    st.write(str(elem.people))
-                with ct1[3]:
-                    st.write(elem.ship)  
-                with ct1[4]:
-                    st.write(elem.catering)
+            timeCruise(elem)
+            time_str2 = new_time.strftime('%H:%M')
+            st.markdown(f'''<table style="border-collapse: collapse; border: 0; border-radius: 12px; text-align: Center; width: 100%; background-color: #7B68EE; color: Black;">
+                        <tr style="border: 0;">
+                        <td style="width: 20%; border: 0;">{elem.hour} - {time_str2}</td>
+                        <td style="width: 20%; border: 0;">{elem.cruise}</td>
+                        <td style="width: 20%; border: 0;">{elem.people} osób</td>
+                        <td style="width: 20%; border: 0;">{elem.ship}</td>
+                        <td style="width: 20%; border: 0;">{elem.catering}</td>
+                        </tr></table><br>''', unsafe_allow_html=True)
         else:
-            with st.container(border=True):
-                st.write("Obiad")
-                ctdn1 = st.columns([1,1,1,1,1])
-                with ctdn1[0]:
-                    st.write(f"{elem.hour}")
-                with ctdn1[1]:
-                    st.write(elem.empty1)
-                with ctdn1[2]:
-                    st.write(str(elem.group))
-                with ctdn1[3]:
-                    st.write(elem.empty1)  
-                with ctdn1[4]:
-                    st.write(elem.name)
+            st.markdown(f'''<table style="border-collapse: collapse; border: 0; border-radius: 12px; text-align: Center; width: 100%; background-color: #DAA520; color: Black;">
+                        <tr style="border: 0;">
+                        <td style="width: 20%; border: 0;">{elem.hour_start} - {elem.hour_stop}</td>
+                        <td style="width: 20%; border: 0;"></td>
+                        <td style="width: 20%; border: 0;">{elem.group} osób</td>
+                        <td style="width: 20%; border: 0;"></td>
+                        <td style="width: 20%; border: 0;">{elem.name}</td>
+                        </tr></table><br>''', unsafe_allow_html=True)
 
 #Pobieranie z bazy danych skróconych informacji o wszystkich rejsach
 def getShortDataForAll():
@@ -186,28 +183,27 @@ def getShortDataForAll():
 
 #Funkcja do wyświetlania skróconych danych o rejsach dla wszystkich dni
 def printDataForAll():
-    ct_all = st.columns([1,1,1,1,1,1])
-    head_title_all = ["Data", "Godziny", "Osoby", "Rejs", "Statek", "Katering"]
-    for i in range(len(head_title_all)):
-        with ct_all[i]:
-            st.header(head_title_all[i])
+    st.markdown('''<table style="border: 0; border-collapse: collapse; border: 0; text-align: Center; width: 100%;">
+                <tr style="border: 0;">
+                <td style="border: 0; width: 16%"><h3>Data</h3></td>
+                <td style="border: 0; width: 16%"><h3>Godzina</h3></td>
+                <td style="border: 0; width: 16%"><h3>Rejs</h3></td>
+                <td style="border: 0; width: 16%;"><h3>Osoby</h3></td>
+                <td style="border: 0; width: 16%;"><h3>Statek</h3></td>
+                <td style="border: 0; width: 16%;"><h3>Catering</h3>
+                </td></tr></table><br>''', unsafe_allow_html=True)
     for elem in tablicaDanych2:
-        with st.container(border=True):
-            ct_all1 = st.columns([1,1,1,1,1,1])
-            timeCruise(elem)
-            time_str3 = new_time.strftime('%H:%M')
-            with ct_all1[0]:  
-                st.write(elem.date)
-            with ct_all1[1]:
-                st.write(f"{elem.hour} - {time_str3}")
-            with ct_all1[2]:
-                st.write(str(elem.people))
-            with ct_all1[3]:
-                st.write(elem.cruise)
-            with ct_all1[4]:
-                st.write(elem.ship)
-            with ct_all1[5]:
-                st.write(elem.catering)
+        timeCruise(elem)
+        time_str3 = new_time.strftime('%H:%M')
+        st.markdown(f'''<table style="border-collapse: collapse; border: 0; border-radius: 12px; text-align: Center; width: 100%; background-color: #7B68EE; color: Black;">
+                        <tr style="border: 0;">
+                        <td style="width: 16%; border: 0">{elem.date}</td>
+                        <td style="width: 16%; border: 0;">{elem.hour} - {time_str3}</td>
+                        <td style="width: 16%; border: 0">{elem.cruise}</td>
+                        <td style="width: 16%; border: 0">{elem.people} osób</td>
+                        <td style="width: 16%; border: 0">{elem.ship}</td>
+                        <td style="width: 16%; border: 0">{elem.catering}</td>
+                        </tr></table><br>''', unsafe_allow_html=True)
 
 #Zapisywanie danych do poszczególnych tablic
 def saveDataToArray():
@@ -232,7 +228,7 @@ def showDetails(shipTable):
         with st.expander("Szczegóły"):
             for info in object.printData():
                 st.write(info)
-            
+        
 #Dodawanie informacji o rejsie
 def addCruiseInfo():
     with st.container(border=True):
@@ -277,21 +273,27 @@ def addDinner():
          with dinCol[0]:
             date = st.date_input("Podaj date", key="dinner_add3")
          with dinCol[1]:
-            hour = st.time_input("Podaj godzinę", key="dinner_add4")
+            dinCol2 = st.columns([1,1])
+            with dinCol2[0]:
+                hour_start = st.time_input("Podaj godzinę rozpoczęcia", key="dinner_add4")
+            with dinCol2[1]:
+                hour_stop = st.time_input("Podaj godzinę zakończenia", key="dinner_add4+1")
          dinBut = st.button("Dodaj obiad")
          if dinBut:
              if dinner != "":
-                hour_str = hour.strftime("%H:%M")
-                c.execute('''INSERT INTO dinners (dinner, data, hour_dinner, people, checked) VALUES (?,?,?,?, 'dinner')''', (dinner, date, hour_str, group))
+                hour_str = hour_start.strftime("%H:%M")
+                hour_str2 = hour_stop.strftime("%H:%M")
+                c.execute('''INSERT INTO dinners (dinner, data, hour_start, hour_stop, people, checked) VALUES (?,?,?,?,?, 'dinner')''', (dinner, date, hour_str, hour_str2, group))
                 conn.commit()
                 st.success("Dodano obiad")
+                selected = "Strona główna"
 
 #Edytowanie danych
 def editInfo():
     c.execute('''SELECT * FROM
               (SELECT id, customer, dc, nb, date, hour, cruise, ship, people, fee, fee_cost, catering, note, checked FROM rejs
               UNION
-              SELECT dID, hour_dinner as hour, people, dinner, ' ', ' ', ' ', data as date, ' ', ' ', ' ', ' ', ' ', checked FROM dinners)
+              SELECT dID, hour_start as hour, hour_stop, people, dinner, ' ', ' ', data as date, ' ', ' ', ' ', ' ', ' ', checked FROM dinners)
               ORDER BY hour, date''')
     for row in c.fetchall():
         if row[13] == 'cruise':
@@ -307,7 +309,7 @@ def editInfo():
                 editCruiseInfo(i, elem)
         else:
             st.write(f"Obiad nr {elem.dID}")
-            with st.popover(f"{elem.name} | {elem.date} | {elem.hour}", use_container_width=True):
+            with st.popover(f"{elem.name} | {elem.date} | {elem.hour_start} - {elem.hour_stop}", use_container_width=True):
                 editDinnerInfo(i, elem)
 
 #Inputy pobierające dane z rekordów tabeli
@@ -349,44 +351,47 @@ def editCruiseInfo(i, obj):
 
 #dID, hour, group, name, empty1, empty2, check, date
 def editDinnerInfo(i, obj):
-    with st.container(border=True):
-         dinner = st.text_area("Podaj obiad", value=obj.name, key=f"dinner_a{i}")
-         group = st.number_input("Podaj liczbę osób", min_value=0, step=1, value=obj.group, key=f"dinner_b{i}")
-         dinCol = st.columns([1,1])
-         with dinCol[0]:
-            date = st.date_input("Podaj date", value=datetime.strptime(obj.date, "%Y-%m-%d").date(), format="DD.MM.YYYY", min_value=datetime.strptime("2000-01-01", "%Y-%m-%d").date(), key=f"dinner_c{i}")
-         with dinCol[1]:
-            hour = st.time_input("Podaj godzinę", value=datetime.strptime(obj.hour, '%H:%M').time(), key=f"dinner_d{i}")
-         cb = st.columns([1,1,1,1,1])
-         with cb[0]:
-            accept_changes_button_dinner = st.button("Zapisz zmiany", key=f"m{i}")
-         with cb[4]:
-            delete_button_dinner = st.button("Usuń", key=f"n{i}")
-         if accept_changes_button_dinner:
-            hour_str = hour.strftime("%H:%M")
-            date_str = date.strftime("%Y-%m-%d")
-            c.execute("UPDATE dinners SET dinner = ?, data = ?, hour_dinner = ?, people = ? WHERE dID = ?",
-                (dinner, date_str, hour_str, group, obj.dID))
+    dinner = st.text_area("Podaj obiad", value=obj.name, key=f"dinner_a{i}")
+    group = st.number_input("Podaj liczbę osób", min_value=0, step=1, value=obj.group, key=f"dinner_b{i}")
+    dinCol = st.columns([1,1])
+    with dinCol[0]:
+        date = st.date_input("Podaj date", value=datetime.strptime(obj.date, "%Y-%m-%d").date(), format="DD.MM.YYYY", min_value=datetime.strptime("2000-01-01", "%Y-%m-%d").date(), key=f"dinner_c{i}")
+    with dinCol[1]:
+        dinCol2 = st.columns([1,1])
+        with dinCol2[0]:
+            hour_start = st.time_input("Podaj godzinę rozpoczęcia", value=datetime.strptime(obj.hour_start, '%H:%M').time(), key=f"dinner_d{i}")
+        with dinCol2[1]:
+            hour_stop = st.time_input("Podaj godzinę zakończenia", value=datetime.strptime(obj.hour_stop, '%H:%M').time(), key=f"dinner_2d{i}")
+    cb = st.columns([1,1,1,1,1])
+    with cb[0]:
+        accept_changes_button_dinner = st.button("Zapisz zmiany", key=f"m{i}")
+    with cb[4]:
+        delete_button_dinner = st.button("Usuń", key=f"n{i}")
+    if accept_changes_button_dinner:
+        hour_str = hour_start.strftime("%H:%M")
+        hour_str2 = hour_stop.strftime("%H:%M")
+        date_str = date.strftime("%Y-%m-%d")
+        c.execute("UPDATE dinners SET dinner = ?, data = ?, hour_start = ?, hour_stop = ?, people = ? WHERE dID = ?", (dinner, date_str, hour_str, hour_str2, group, obj.dID))
+        conn.commit()
+        st.success( "Zaktualizowano dane")
+    if delete_button_dinner:
+            c.execute(f"DELETE FROM dinners WHERE dID = {obj.dID}")
             conn.commit()
-            st.success( "Zaktualizowano dane")
-         if delete_button_dinner:
-             c.execute(f"DELETE FROM dinners WHERE id = {object.dID}")
-             conn.commit()
-             st.success("Usunięto dane")
-    
-#Ustawienia SideBar (DODAĆ DO LOGOWANIA IKONE "box-arrow-in-right")
+            st.success("Usunięto dane")
+ 
+#Ustawienia SideBar
 with st.sidebar:
     selected = option_menu(
         menu_title = "Port Katamaranów",
-        options = ["Strona główna", "Szczegóły", "Panel zarządzania", "Historia"],
-        icons = ["house", "book", "pencil-square", "clock-history"],
+        options = ["Strona główna", "Panel zarządzania", "Szczegóły", "Historia"],
+        icons = ["house", "pencil-square", "book", "clock-history"],
         menu_icon="tsunami",
         default_index = 0,
     )
 
 #Strona główna
 if (selected == "Strona główna"):
-    tab_1, tab_2 = st.tabs(["Wybrany dzień", "Wszystko"])
+    tab_1, tab_2 = st.tabs(["WYBRANY DZIEŃ :sunrise:", "WSZYSTKO :scroll:"])
     with tab_1:
         theDay = choiceTheDay()
         getShortData(theDay)
@@ -394,18 +399,17 @@ if (selected == "Strona główna"):
     with tab_2:
         getShortDataForAll()
         printDataForAll()
-    st.markdown(tab_config, unsafe_allow_html=True)
-
+   
 #Szczegóły rejsów
 if (selected == "Szczegóły"):
     st.title("Szczegóły rejsów :ship:")
 
     theDay2 = choiceTheDay()
     saveDataToArray()
-    
+
     #Wyświetl dane
     scr = st.columns([1,1,1,1])
-    albatros_tab, biala_mewa_tab, kormoran_tab, ckt_vip_tab = st.tabs(["Albatros", "Biała Mewa", "Kormoran", "CKT VIP"])
+    albatros_tab, biala_mewa_tab, kormoran_tab, ckt_vip_tab = st.tabs(["Albatros", "Biała mewa", "Kormoran", "CKT VIP"])
     with albatros_tab: 
         st.markdown(f"<h3 style=\"{title_style}\">Albatros<p>Limit osób: 60</p></h3>", unsafe_allow_html=True)
         st.divider()
@@ -422,24 +426,18 @@ if (selected == "Szczegóły"):
         st.markdown(f"<h3 style=\"{title_style}\">CKT VIP<p>Limit osób: 12</p></h3>", unsafe_allow_html=True)
         st.divider()
         showDetails(ckt_vip)
-    
+
 #Panel zarządzania danymi
 if selected == "Panel zarządzania":
-    tab1, tab2, tab3 = st.tabs(["Dodaj rejs", "Dodaj obiad", "Edytuj"])
+    tab1, tab2, tab3 = st.tabs(["DODAJ REJS :anchor:", "DODAJ OBIAD :knife_fork_plate:", "EDYTUJ DANE :pencil:"])
     with tab1:
-        st.header("Dodaj rejs :anchor:")
         addCruiseInfo()
-    
     with tab2:
-        st.header("Dodaj obiad :knife_fork_plate:")
         addDinner()
-    
     with tab3:
-        st.header("Edytuj dane :pencil:")
         editInfo()
-        
-    st.markdown(tab_config, unsafe_allow_html=True)
 
+#Historia
 if (selected == "Historia"):
     st.markdown("<h1 style=\"background-color: #85C1C1; color: #FFFFFF; border-radius: 10px; font-weight: bold; padding-left: 1rem;\">Historia rejsów<h1>", unsafe_allow_html=True)
     history = showAllData()
