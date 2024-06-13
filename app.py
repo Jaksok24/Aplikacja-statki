@@ -21,7 +21,7 @@ info_style = "color: White; background-color: #85C1C1; text-align: Center; borde
 tab_config = '''<style> .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p { font-size:2rem; } </style> '''      
 
 #Łączenia się z bazą danych
-conn = sqlite3.connect('statki_database.db')
+conn = sqlite3.connect('./statki_database.db')
 c = conn.cursor()
 
 #Tablice/zmienne wykorzystywane dla całej aplikacji
