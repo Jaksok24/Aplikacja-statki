@@ -251,7 +251,7 @@ def addCruiseInfo():
             hour = st.time_input("Podaj godzinę")  
             cruise = st.selectbox("Wybierz rejs", ["Po rzekach i jeziorach - 1h", "Fotel Papieski - 1h", "Kanał Augustowski - 1h", "Dolina Rospudy - 1,5h", "Szlakiem Papieskim - 3h", "Staw Swoboda - 4h", "Gorczyca - „Pełen Szlak Papieski” – 6h", "Paniewo", ""])
             fee_cost = st.number_input("Kwota zaliczki")
-            catering = st.selectbox("Katering", ["Tak", "Nie"])
+            catering = st.selectbox("Katering", ["Nie", "Tak"])
         note = st.text_area("Notatki")
         add_button = st.button("Zapisz")
     if add_button:
@@ -330,7 +330,7 @@ def editCruiseInfo(i, obj):
         hour = st.time_input("Godzina", value=datetime.strptime(obj.hour, '%H:%M').time(), key=f"h{i}")
         cruise = st.selectbox("Rejs", ["Po rzekach i jeziorach - 1h", "Fotel Papieski - 1h", "Kanał Augustowski - 1h", "Dolina Rospudy - 1,5h", "Szlakiem Papieskim - 3h", "Staw Swoboda - 4h", "Gorczyca - „Pełen Szlak Papieski” – 6h", "Paniewo"], index=["Po rzekach i jeziorach - 1h", "Fotel Papieski - 1h", "Kanał Augustowski - 1h", "Dolina Rospudy - 1,5h", "Szlakiem Papieskim - 3h", "Staw Swoboda - 4h", "Gorczyca - „Pełen Szlak Papieski” – 6h", "Paniewo"].index(obj.cruise), key=f"i{i}")
         fee_cost = st.number_input("Kwota zaliczki", value=obj.fee_cost, key=f"j{i}")
-        catering = st.selectbox("Katering", ["Tak", "Nie"], index=["Tak", "Nie"].index(obj.catering), key=f"k{i}")
+        catering = st.selectbox("Katering", ["Nie", "Tak"], index=["Nie", "Tak"].index(obj.catering), key=f"k{i}")
     note = st.text_area("Notatki", value=obj.note, key=f"l{i}")
     cb = st.columns([1,1,1,1,1])
     with cb[0]:
